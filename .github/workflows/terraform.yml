@@ -10,37 +10,42 @@ on:
 
 jobs:
   terraform:
-    name: Terraform Plan
+    name: Terraform Plan & Apply
     runs-on: ubuntu-latest
 
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: eu-west-1
+
     steps:
-      # Step 1: Checkout the repo
+      # Checkout code
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Step 2: Setup Terraform
+      # Setup Terraform
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.6.0
 
-      # Step 3: Terraform Init
+      # Init
       - name: Terraform Init
         run: terraform init
 
-      # Step 4: Terraform Format Check
-      - name: Terraform Format Check
+      # Format check
+      - name: Terraform Format
         run: terraform fmt -check
 
-      # Step 5: Terraform Validate
+      # Validate
       - name: Terraform Validate
         run: terraform validate
 
-      # Step 6: Terraform Plan
+      # Plan
       - name: Terraform Plan
         run: terraform plan -out=tfplan
 
-      # Optional Step 7: Terraform Apply (commented out for safety)
-      # - name: Terraform Apply
-      #   if: github.ref == 'refs/heads/main'
-      #   run: terraform apply -auto-approve tfplan
+      # Apply (ONLY on main branch push)
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main'
+        run: terraform apply -auto-approve tfplan
