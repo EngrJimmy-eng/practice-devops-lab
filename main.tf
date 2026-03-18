@@ -140,24 +140,12 @@ resource "aws_instance" "practice_ec2" {
               EOF
 }
 
-# --- IAM Role for SSM ---
-resource "aws_iam_role" "ssm_role" {
+data "aws_iam_role" "ssm_role" {
   name = "EC2-SSM-Role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "ec2.amazonaws.com"
-        }
-      }
-    ]
-  })
-
-  tags = {
-    Name = "SSM-Role"
-  }
 }
+
+resource "aws_iam_instance_profile" "ssm_instance_profile" {
+  name = "ssm-instance-profile"
+  role = data.aws_iam_role.ssm_role.name
+}
+
