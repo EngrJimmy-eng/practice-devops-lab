@@ -139,3 +139,25 @@ resource "aws_instance" "practice_ec2" {
               usermod -aG docker ubuntu
               EOF
 }
+
+# --- IAM Role for SSM ---
+resource "aws_iam_role" "ssm_role" {
+  name = "EC2-SSM-Role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      }
+    ]
+  })
+
+  tags = {
+    Name = "SSM-Role"
+  }
+}
