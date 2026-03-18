@@ -1,9 +1,13 @@
-
-
 provider "aws" {
   region = var.region
 }
 
+# --- Get Available AZs ---
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+# --- Get Latest Ubuntu AMI ---
 data "aws_ami" "ubuntu" {
   most_recent = true
 
@@ -65,20 +69,20 @@ resource "aws_route_table" "practice_public_rt" {
   }
 }
 
-# --- Associate Public Subnet with Route Table ---
+# --- Route Table Association ---
 resource "aws_route_table_association" "practice_public_assoc" {
   subnet_id      = aws_subnet.practice_public_subnet.id
   route_table_id = aws_route_table.practice_public_rt.id
 }
 
-# --- Security Group for Practice Instance ---
+# --- Security Group ---
 resource "aws_security_group" "practice_sg" {
   name        = "practice-sg"
-  description = "Allow SSH, HTTP, and Docker testing ports"
+  description = "Allow SSH, HTTP, and Docker ports"
   vpc_id      = aws_vpc.practice_vpc.id
 
   ingress {
-    description = "SSH/SSM"
+    description = "SSH"
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
@@ -86,7 +90,7 @@ resource "aws_security_group" "practice_sg" {
   }
 
   ingress {
-    description = "HTTP Docker Test"
+    description = "Docker App Port"
     from_port   = 8080
     to_port     = 8080
     protocol    = "tcp"
@@ -94,7 +98,7 @@ resource "aws_security_group" "practice_sg" {
   }
 
   ingress {
-    description = "Optional HTTP port 80"
+    description = "HTTP"
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
@@ -113,12 +117,12 @@ resource "aws_security_group" "practice_sg" {
   }
 }
 
-# --- EC2 Practice Instance ---
+# --- EC2 Instance ---
 resource "aws_instance" "practice_ec2" {
-  ami = data.aws_ami.ubuntu.id
-  instance_type          = "t3.micro"
-  subnet_id              = aws_subnet.practice_public_subnet.id
-  security_groups        = [aws_security_group.practice_sg.name]
+  ami                         = data.aws_ami.ubuntu.id
+  instance_type               = "t3.micro"
+  subnet_id                   = aws_subnet.practice_public_subnet.id
+  vpc_security_group_ids      = [aws_security_group.practice_sg.id]
   associate_public_ip_address = true
 
   tags = {
@@ -126,7 +130,6 @@ resource "aws_instance" "practice_ec2" {
     Environment = "dev"
   }
 
-  # Install Docker automatically
   user_data = <<-EOF
               #!/bin/bash
               apt update -y
@@ -135,9 +138,4 @@ resource "aws_instance" "practice_ec2" {
               systemctl enable docker
               usermod -aG docker ubuntu
               EOF
-}
-
-# --- Data source for AZs ---
-data "aws_availability_zones" "available" {
-  state = "available"
 }
