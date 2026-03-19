@@ -137,6 +137,8 @@ resource "aws_instance" "practice_ec2" {
               systemctl start docker
               systemctl enable docker
               usermod -aG docker ubuntu
+# Run Nginx container automatically
+              docker run -d -p 8080:80 --name nginx-server nginx
               EOF
 }
 
