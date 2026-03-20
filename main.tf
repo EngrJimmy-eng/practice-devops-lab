@@ -142,9 +142,9 @@ resource "aws_instance" "practice_ec2" {
               EOF
 }
 
-# --- IAM Role for SSM ---
+
 resource "aws_iam_role" "ssm_role" {
-  name = "practice-ssm-role"  # ✅ New unique name
+  name = "practice-ssm-role-v2"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -160,19 +160,12 @@ resource "aws_iam_role" "ssm_role" {
   })
 }
 
-# --- Attach SSM Policy ---
 resource "aws_iam_role_policy_attachment" "ssm_policy" {
   role       = aws_iam_role.ssm_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
-# --- Instance Profile ---
 resource "aws_iam_instance_profile" "ssm_instance_profile" {
-  name = "practice-ssm-instance-profile"  # ✅ New unique name
+  name = "practice-ssm-instance-profile-v2"
   role = aws_iam_role.ssm_role.name
 }
-
-
-
-
-
