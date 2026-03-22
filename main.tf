@@ -131,15 +131,38 @@ resource "aws_instance" "practice_ec2" {
   }
 
   user_data = <<-EOF
-              #!/bin/bash
-              apt update -y
-              apt install -y docker.io
-              systemctl start docker
-              systemctl enable docker
-              usermod -aG docker ubuntu
-# Run Nginx container automatically
-              docker run -d -p 8080:80 --name nginx-server nginx
-              EOF
+#!/bin/bash
+set -e
+
+# Log everything
+exec > /var/log/user-data.log 2>&1
+
+echo "Starting setup..."
+
+# Update packages
+apt update -y
+
+# Install Docker
+apt install -y docker.io
+
+# Start Docker service
+systemctl start docker
+systemctl enable docker
+
+echo "Waiting for Docker to be ready..."
+
+# Wait until Docker is ready
+until docker info > /dev/null 2>&1; do
+  sleep 5
+done
+
+echo "Docker is ready, running container..."
+
+# Run Nginx
+docker run -d -p 8080:80 --restart unless-stopped nginx
+
+echo "Setup complete."
+EOF
 }
 
 
